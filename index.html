@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nissan Qashqai J11 — Service Dashboard</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e222e;
+    --border: #2a2f3d;
+    --accent: #c8a84b;
+    --accent2: #e8c96a;
+    --red: #e05252;
+    --orange: #e07a2a;
+    --yellow: #d4b840;
+    --green: #4caf7d;
+    --blue: #4a9edd;
+    --muted: #6b7280;
+    --text: #e8eaf0;
+    --text2: #9aa0b0;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0f1520 0%, #1a1f2e 50%, #0f1520 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  .car-icon {
+    width: 72px; height: 72px; border-radius: 16px; flex-shrink: 0; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(195,20,45,0.35);
+  }
+  .car-icon svg { display: block; width: 72px; height: 72px; }
+  .car-title h1 { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: 0.3px; }
+  .car-title .subtitle { color: var(--text2); font-size: 12px; margin-top: 2px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .car-title .subtitle span { display: flex; align-items: center; gap: 4px; }
+  .car-badges { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .badge {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 3px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--text2);
+  }
+  .badge.gold { border-color: var(--accent); color: var(--accent); }
+
+  /* ── ODOMETER WIDGET ── */
+  .odo-widget {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 16px;
+    padding: 20px 28px; text-align: center; min-width: 210px;
+  }
+  .odo-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 6px; }
+  .odo-display {
+    font-size: 36px; font-weight: 800; font-variant-numeric: tabular-nums;
+    color: var(--accent2); letter-spacing: 2px; line-height: 1;
+  }
+  .odo-unit { font-size: 13px; color: var(--text2); margin-left: 4px; font-weight: 400; }
+  .odo-input-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+  .odo-input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 14px; font-family: var(--font);
+    padding: 7px 10px; width: 120px; text-align: center; outline: none; transition: border-color 0.2s;
+  }
+  .odo-input:focus { border-color: var(--accent); }
+  .odo-btn {
+    background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
+    padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s;
+  }
+  .odo-btn:hover { background: var(--accent2); }
+  .odo-btn:active { transform: scale(0.97); }
+
+  /* ── COUNTDOWN WIDGET ── */
+  .countdown-widget {
+    background: linear-gradient(135deg, rgba(74,158,221,0.12) 0%, rgba(74,158,221,0.05) 100%);
+    border: 1px solid rgba(74,158,221,0.3); border-radius: 16px;
+    padding: 16px 22px; text-align: center; min-width: 160px;
+  }
+  .cd-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--blue); margin-bottom: 6px; font-weight: 700; }
+  .cd-days { font-size: 40px; font-weight: 800; color: var(--blue); line-height: 1; letter-spacing: 1px; }
+  .cd-unit { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .cd-date { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── GRID LAYOUT ── */
+  .main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+  .left-col { display: flex; flex-direction: column; gap: 24px; }
+  .right-col { display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── SECTION CARDS ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .card-header h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); }
+  .card-icon { font-size: 18px; }
+  .card-body { padding: 20px; }
+
+  /* ── SERVICE ITEMS ── */
+  .service-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .service-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .service-item:first-child { padding-top: 0; }
+  .service-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .service-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+  .service-pill {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+  }
+  .pill-ok    { background: rgba(76,175,125,0.15); color: var(--green);  border: 1px solid rgba(76,175,125,0.3); }
+  .pill-watch { background: rgba(212,184,64,0.15); color: var(--yellow); border: 1px solid rgba(212,184,64,0.3); }
+  .pill-soon  { background: rgba(224,122,42,0.15); color: var(--orange); border: 1px solid rgba(224,122,42,0.3); }
+  .pill-due   { background: rgba(224,82,82,0.15);  color: var(--red);    border: 1px solid rgba(224,82,82,0.3); }
+  .service-meta { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--text2); margin-bottom: 8px; flex-wrap: wrap; }
+  .service-meta span { display: flex; align-items: center; gap: 4px; }
+  .progress-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .progress-ok   .progress-fill { background: linear-gradient(90deg, var(--green),  #6dd49a); }
+  .progress-watch .progress-fill { background: linear-gradient(90deg, var(--yellow), #ecd060); }
+  .progress-soon  .progress-fill { background: linear-gradient(90deg, var(--orange), #f09050); }
+  .progress-due   .progress-fill { background: linear-gradient(90deg, var(--red),    #f07070); }
+  .service-note { font-size: 11.5px; color: var(--text2); margin-top: 7px; line-height: 1.4; }
+
+  /* ── SERVICE LOG FORM ── */
+  .log-form { display: flex; flex-direction: column; gap: 10px; }
+  .log-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .log-select, .log-text, .log-km {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 13px; font-family: var(--font); padding: 8px 10px; outline: none; transition: border-color 0.2s;
+  }
+  .log-select:focus, .log-text:focus, .log-km:focus { border-color: var(--accent); }
+  .log-select { flex: 1; min-width: 160px; }
+  .log-text   { flex: 1; min-width: 160px; }
+  .log-km     { width: 110px; }
+  .log-btn {
+    background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap;
+  }
+  .log-btn:hover { background: var(--accent2); }
+  .log-btn:active { transform: scale(0.97); }
+  .log-hint { font-size: 11px; color: var(--muted); }
+  .log-entries { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .log-entry {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+    font-size: 12px;
+  }
+  .log-entry-label { color: var(--text); font-weight: 600; }
+  .log-entry-km    { color: var(--accent); font-weight: 700; white-space: nowrap; }
+  .log-entry-del   { color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
+  .log-entry-del:hover { color: var(--red); }
+  .log-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 12px 0; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: 4px 0; }
+  .tl-item { display: flex; gap: 14px; padding-bottom: 18px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+  .tl-dot  { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2px solid; margin-top: 3px; }
+  .tl-line { width: 2px; flex: 1; background: var(--border); margin-top: 4px; }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-body { flex: 1; }
+  .tl-header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+  .tl-km   { font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .tl-date { font-size: 11px; color: var(--muted); }
+  .tl-items { font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+  .tl-cat {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px; margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .cat-service    { background: rgba(200,168,75,0.15);  color: var(--accent); }
+  .cat-brakes     { background: rgba(224,82,82,0.15);   color: var(--red); }
+  .cat-timing     { background: rgba(74,158,221,0.15);  color: var(--blue); }
+  .cat-suspension { background: rgba(76,175,125,0.15);  color: var(--green); }
+  .cat-electrical { background: rgba(160,120,240,0.15); color: #a078f0; }
+  .cat-serbia     { background: rgba(224,122,42,0.15);  color: var(--orange); }
+  .cat-custom     { background: rgba(74,158,221,0.10);  color: var(--blue); }
+
+  /* ── PROBLEM ALERTS ── */
+  .alert-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .alert-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .alert-item:first-child { padding-top: 0; }
+  .alert-icon-wrap { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .alert-high   { background: rgba(224,82,82,0.15); }
+  .alert-medium { background: rgba(224,122,42,0.15); }
+  .alert-low    { background: rgba(212,184,64,0.15); }
+  .alert-body { flex: 1; }
+  .alert-title  { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .alert-desc   { font-size: 11.5px; color: var(--text2); line-height: 1.4; }
+  .alert-status { font-size: 10.5px; font-weight: 600; margin-top: 4px; }
+  .alert-status.done    { color: var(--green); }
+  .alert-status.monitor { color: var(--yellow); }
+  .alert-status.watch   { color: var(--orange); }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; text-align: center; }
+  .stat-val   { font-size: 20px; font-weight: 800; color: var(--accent2); line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── URGENT BANNER ── */
+  .urgent-banner {
+    background: linear-gradient(135deg, rgba(224,82,82,0.12) 0%, rgba(224,122,42,0.08) 100%);
+    border: 1px solid rgba(224,82,82,0.3); border-radius: 12px; padding: 14px 18px;
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 4px;
+  }
+  .urgent-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .urgent-text h3 { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 3px; }
+  .urgent-text p  { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+  /* ── INSPECTION CARD ── */
+  .inspection-card {
+    background: linear-gradient(135deg, rgba(74,158,221,0.08) 0%, rgba(74,158,221,0.04) 100%);
+    border: 1px solid rgba(74,158,221,0.25); border-radius: 12px; padding: 16px 18px;
+  }
+  .insp-title    { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--blue); margin-bottom: 10px; }
+  .insp-row      { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .insp-row .label { font-size: 12px; color: var(--text2); }
+  .insp-row .value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .insp-checklist { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .insp-check { font-size: 11.5px; color: var(--text2); display: flex; align-items: flex-start; gap: 6px; }
+  .insp-check.pass::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .insp-check.warn::before { content: '⚠'; color: var(--orange); flex-shrink: 0; }
+  .insp-check.fail::before { content: '✗'; color: var(--red); flex-shrink: 0; }
+  .insp-countdown {
+    display: flex; gap: 10px; margin-top: 12px; margin-bottom: 4px;
+  }
+  .cd-block {
+    flex: 1; background: rgba(74,158,221,0.08); border: 1px solid rgba(74,158,221,0.2);
+    border-radius: 10px; padding: 10px 8px; text-align: center;
+  }
+  .cd-block .num  { font-size: 26px; font-weight: 800; color: var(--blue); line-height: 1; }
+  .cd-block .lbl  { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── HEADER WIDGETS CONTAINER ── */
+  .header-widgets { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+    /* Header stacks vertically */
+    .header { flex-direction: column; align-items: stretch; padding: 20px 16px; gap: 16px; }
+
+    /* Logo sits on its own line, left-aligned */
+    .header-left { flex-direction: column; align-items: flex-start; gap: 14px; }
+
+    /* Title info left-aligned under logo */
+    .car-title h1 { font-size: 18px; }
+    .car-title .subtitle { gap: 10px; }
+
+    /* Widgets each fill full width */
+    .header-widgets { flex-direction: column; width: 100%; }
+    .odo-widget { min-width: unset; width: 100%; }
+    .countdown-widget { min-width: unset; width: 100%; }
+    .odo-input-row { justify-content: center; }
+  }
+
+  .updated-flash { animation: flash 0.5s ease; }
+  @keyframes flash { 0% { background: rgba(200,168,75,0.15); } 100% { background: transparent; } }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="car-icon">
+      <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+        <rect width="72" height="72" rx="14" fill="#C3142D"/>
+        <defs>
+          <mask id="rm">
+            <rect width="72" height="72" fill="white"/>
+            <rect x="7" y="28.5" width="58" height="15" fill="black"/>
+          </mask>
+        </defs>
+        <!-- Ring -->
+        <circle cx="36" cy="36" r="21.5" fill="none" stroke="white" stroke-width="4" mask="url(#rm)"/>
+        <!-- Bar top line -->
+        <line x1="9" y1="28.5" x2="63" y2="28.5" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Bar bottom line -->
+        <line x1="9" y1="43.5" x2="63" y2="43.5" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- NISSAN text -->
+        <text x="36" y="40" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="white" letter-spacing="2">NISSAN</text>
+      </svg>
+    </div>
+    <div class="car-title">
+      <h1>Nissan Qashqai J11 · 1.5 dCi 110</h1>
+      <div class="subtitle">
+        <span>🔑 Engine K9K · Acenta Crossover</span>
+        <span>🪪 Plate: <strong>BG2938MO</strong></span>
+        <span>🔢 VIN: <strong>SJNFAAJ11U1704861</strong></span>
+      </div>
+      <div class="car-badges">
+        <span class="badge gold">K9K Diesel</span>
+        <span class="badge">Serbia · Belgrade</span>
+        <span class="badge">10,000 km Oil Interval</span>
+        <span class="badge">All-Season Tyres</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-widgets">
+    <div class="odo-widget">
+      <div class="odo-label">Current Odometer</div>
+      <div class="odo-display" id="odo-display">152,000<span class="odo-unit">km</span></div>
+      <div class="odo-input-row">
+        <input class="odo-input" type="number" id="odo-input" placeholder="New km…" min="152000" max="999999">
+        <button class="odo-btn" onclick="updateMileage()">Update</button>
+      </div>
+    </div>
+    <div class="countdown-widget">
+      <div class="cd-label">⚙️ Tehnički Pregled</div>
+      <div class="cd-days" id="cd-days">--</div>
+      <div class="cd-unit">days remaining</div>
+      <div class="cd-date">26 August 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ STATS ROW ═══ -->
+<div style="max-width:1400px;margin:0 auto;padding:20px 24px 0;">
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-val" id="stat-oil">10,000</div>
+      <div class="stat-label">km since last oil change</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" id="stat-oilrem">2,000</div>
+      <div class="stat-label">km to next oil service</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" id="stat-timing">35,685</div>
+      <div class="stat-label">km on timing belt</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" id="stat-nextbig">2,000</div>
+      <div class="stat-label">km to next major service</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ MAIN GRID ═══ -->
+<div class="main">
+
+  <!-- ── LEFT COLUMN ── -->
+  <div class="left-col">
+
+    <!-- URGENT ALERTS -->
+    <div id="urgent-section"></div>
+
+    <!-- SERVICE LOG -->
+    <div class="card">
+      <div class="card-header" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="card-icon">✏️</span>
+          <h2>Log a Service or Part</h2>
+        </div>
+        <button onclick="clearState()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:var(--font);transition:color 0.2s,border-color 0.2s;" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)';" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)';">⟳ Reset all data</button>
+      </div>
+      <div class="card-body">
+        <div class="log-form">
+          <div class="log-row">
+            <select class="log-select" id="log-type" onchange="onLogTypeChange()">
+              <option value="">— Select service / part —</option>
+              <option value="oil">Engine Oil + Oil Filter</option>
+              <option value="cabin">Cabin / Pollen Filter</option>
+              <option value="air">Engine Air Filter</option>
+              <option value="fuel">Fuel Filter (Diesel)</option>
+              <option value="brakes">Brake Pads + Discs</option>
+              <option value="brakefluiddynamic">Brake Fluid Flush</option>
+              <option value="tyrerotation">Tyre Rotation</option>
+              <option value="timing">Timing Belt Kit</option>
+              <option value="coolant">Coolant Change</option>
+              <option value="glowplugs">Glow Plugs</option>
+              <option value="custom">Custom / Other…</option>
+            </select>
+            <input class="log-km" type="number" id="log-km" placeholder="km done at" min="1" max="999999">
+          </div>
+          <div id="log-custom-row" style="display:none;">
+            <input class="log-text" style="width:100%;" type="text" id="log-custom-text" placeholder="Describe what was done (e.g. EGR cleaned, rear dampers replaced)">
+          </div>
+          <div class="log-row">
+            <button class="log-btn" onclick="logService()" style="width:100%;">➕ Add to Service Log</button>
+          </div>
+          <div class="log-hint">Logging a known service updates the maintenance schedule and progress bars automatically.</div>
+        </div>
+        <div class="log-entries" id="log-entries">
+          <div class="log-empty" id="log-empty">No entries logged yet in this session.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE SCHEDULE -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🔧</span>
+        <h2>Maintenance Schedule</h2>
+      </div>
+      <div class="card-body" id="services-container">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- INSPECTION READINESS -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">📋</span>
+        <h2>Tehnički Pregled — 26 Aug 2026</h2>
+      </div>
+      <div class="card-body">
+        <div class="inspection-card">
+          <div class="insp-title">Roadworthiness Inspection Countdown</div>
+          <div class="insp-countdown" id="insp-countdown">
+            <div class="cd-block"><div class="num" id="cd2-days">--</div><div class="lbl">Days</div></div>
+            <div class="cd-block"><div class="num" id="cd2-hours">--</div><div class="lbl">Hours</div></div>
+            <div class="cd-block"><div class="num" id="cd2-mins">--</div><div class="lbl">Mins</div></div>
+          </div>
+          <div class="insp-row"><span class="label">Date</span><span class="value">26 August 2026</span></div>
+          <div class="insp-row"><span class="label">Type</span><span class="value">Annual Serbian registration</span></div>
+          <div class="insp-checklist">
+            <div class="insp-check pass">Tyres — Nokian Seasonproof 2 (3PMSF) · new</div>
+            <div class="insp-check pass">Wiper blades — replaced Apr 2026</div>
+            <div class="insp-check pass" id="insp-oil">Engine oil + filters — fresh (~142k km)</div>
+            <div class="insp-check pass">Brake fluid — flushed Sep 2025</div>
+            <div class="insp-check pass">Glow plugs — replaced Oct 2024</div>
+            <div class="insp-check pass">Front struts, springs, top mounts — new ~122k km</div>
+            <div class="insp-check pass">Steering rack — rebuilt ~139k km</div>
+            <div class="insp-check warn">Brake discs / pads — in wear window, measure at pre-check</div>
+            <div class="insp-check warn">Lower control arm bushings — original, inspect on lift</div>
+            <div class="insp-check warn">Rear dampers — original at 152k km, bounce test needed</div>
+            <div class="insp-check warn">Headlight aim — verify alignment</div>
+            <div class="insp-check fail">Brake pads priority — schedule pre-inspection visit 3 wks before</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT COLUMN ── -->
+  <div class="right-col">
+
+    <!-- KNOWN PROBLEMS -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">⚠️</span>
+        <h2>Known K9K / J11 Issues</h2>
+      </div>
+      <div class="card-body">
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-high">💀</div>
+          <div class="alert-body">
+            <div class="alert-title">HP Fuel Pump / Injector Failure</div>
+            <div class="alert-desc">The K9K HP fuel pump is extremely sensitive to dirty or late-changed fuel filter. Failure costs €1,000–2,500. Use only quality diesel.</div>
+            <div class="alert-status monitor" id="alert-fuel">⬤ Monitor — next fuel filter at ~172,000 km</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-high">🔥</div>
+          <div class="alert-body">
+            <div class="alert-title">EGR Valve & Cooler Clogging</div>
+            <div class="alert-desc">EGR clogging causes rough idle, power loss and increased DPF load. Common on K9K from 80k km+. Clean every 40–60k km.</div>
+            <div class="alert-status done">✓ Done — EGR recently cleaned</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-high">💨</div>
+          <div class="alert-body">
+            <div class="alert-title">DPF Clogging / Ash Build-up</div>
+            <div class="alert-desc">DPF passive regen requires sustained highway speeds. City-only driving leads to premature blocking. Ash (irreversible) accumulates over lifetime.</div>
+            <div class="alert-status monitor">⬤ 40% ash level — highway driving profile is ideal</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-medium">⚙️</div>
+          <div class="alert-body">
+            <div class="alert-title">Timing Belt Tensioner Bearing</div>
+            <div class="alert-desc">Tensioner bearings on K9K can fail before the belt wears out. Replacement is mandatory with every belt change. Failure = bent valves.</div>
+            <div class="alert-status done">✓ SKF kit fitted July 2023 @ 116,315 km</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-medium">💧</div>
+          <div class="alert-body">
+            <div class="alert-title">Water Pump (with Timing Belt)</div>
+            <div class="alert-desc">Water pump should always be replaced with the timing belt. If skipped, pump failure at ~150–180k km forces a full belt job again.</div>
+            <div class="alert-status watch">⚠ Verify if water pump was changed in the 2023 belt job</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-medium">🔩</div>
+          <div class="alert-body">
+            <div class="alert-title">Alternator OAP Decoupler Wear</div>
+            <div class="alert-desc">The one-way alternator pulley (OAP) wears on K9K, causing belt squeal or rattle on cold start / shutdown. Very common at 100–130k km.</div>
+            <div class="alert-status done">✓ Replaced ~145,000 km</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-low">🛞</div>
+          <div class="alert-body">
+            <div class="alert-title">Control Arm Bushings & Ball Joints</div>
+            <div class="alert-desc">Front lower control arm bushings crack and ball joints wear from ~100k km. Often missed when only struts are replaced. Common pregled fail point.</div>
+            <div class="alert-status watch">⚠ Original — inspect on lift at pre-inspection visit</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="alert-icon-wrap alert-low">🛢️</div>
+          <div class="alert-body">
+            <div class="alert-title">Oil Consumption (K9K)</div>
+            <div class="alert-desc">K9K engines can consume up to 0.5 L/1000 km when worn. Check dipstick every 3,000–4,000 km. Always top up with 5W-30 ACEA C3/C4.</div>
+            <div class="alert-status monitor">⬤ Check dipstick regularly between services</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICE HISTORY TIMELINE -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">📅</span>
+        <h2>Service History</h2>
+      </div>
+      <div class="card-body">
+        <div class="timeline" id="timeline-container">
+          <!-- Static + dynamic entries rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ JAVASCRIPT ═══ -->
+<script>
+// ═══════════════════════════════════════════════
+// ☁️  SUPABASE CONFIG
+// Replace both values after completing the Supabase setup (see guide).
+// The anon key is safe to publish — Supabase RLS controls access.
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = 'https://aakvacyzlxmuhahftoqy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFha3ZhY3l6bHhtdWhhaGZ0b3F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzkzMjEsImV4cCI6MjA5MzU1NTMyMX0.IdjgQ7RyOZ8fNyOpaVa8QVzL_ziskkMWhdmrCefQFCk';
+const ROW_ID       = 'SJNFAAJ11U1704861';  // VIN — unique row identifier
+const CLOUD_ENABLED = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+
+// ═══════════════════════════════════════════════
+// PERSISTENCE KEY (localStorage fallback)
+// ═══════════════════════════════════════════════
+const STORAGE_KEY = 'qashqai_dashboard_v1';
+
+// ═══════════════════════════════════════════════
+// DEFAULT STATE (factory values)
+// ═══════════════════════════════════════════════
+const DEFAULT_KM = 152000;
+
+const DEFAULT_SERVICES = [
+  { id: 'oil',               name: '🛢️ Engine Oil + Oil Filter',     lastKm: 142000, intervalKm: 10000,  warnAt: 0.75 },
+  { id: 'cabin',             name: '🌬️ Cabin / Pollen Filter',       lastKm: 142000, intervalKm: 10000,  warnAt: 0.75 },
+  { id: 'air',               name: '💨 Engine Air Filter',            lastKm: 142000, intervalKm: 10000,  warnAt: 0.75 },
+  { id: 'fuel',              name: '⛽ Fuel Filter (Diesel)',         lastKm: 132000, intervalKm: 40000,  warnAt: 0.65 },
+  { id: 'brakes',            name: '🛑 Brake Pads + Discs',          lastKm: 106006, intervalKm: 50000,  warnAt: 0.70 },
+  { id: 'brakefluiddynamic', name: '💧 Brake Fluid',                 lastKm: 140000, intervalKm: 40000,  warnAt: 0.75 },
+  { id: 'tyrerotation',      name: '🔄 Tyre Rotation',               lastKm: 151500, intervalKm: 10000,  warnAt: 0.80 },
+  { id: 'timing',            name: '⛓️ Timing Belt Kit',             lastKm: 116315, intervalKm: 160000, warnAt: 0.70 },
+  { id: 'coolant',           name: '🌡️ Coolant (Glaceol RX Type D)', lastKm: 116315, intervalKm: 90000,  warnAt: 0.75 },
+  { id: 'glowplugs',         name: '🔌 Glow Plugs (4×)',             lastKm: 127000, intervalKm: 100000, warnAt: 0.75 },
+];
+
+// ═══════════════════════════════════════════════
+// LIVE STATE (mutated at runtime)
+// ═══════════════════════════════════════════════
+let currentKm = DEFAULT_KM;
+// Deep-clone defaults so mutations don't affect DEFAULT_SERVICES
+const SERVICES = DEFAULT_SERVICES.map(s => ({ ...s }));
+
+// customLog  = timeline entries added by user
+// savedEntries = compact list shown in the log panel [{id, label, km}]
+let customLog    = [];
+let savedEntries = [];
+
+// ═══════════════════════════════════════════════
+// STATIC DATA (never mutated)
+// ═══════════════════════════════════════════════
+const SERVICE_NOTES = {
+  oil:               'High-mileage interval — 10,000 km / 12 months. Use 5W-30 ACEA C3/C4.',
+  cabin:             'Replace at every oil service interval (10,000 km).',
+  air:               'Inspect at every service, replace every 10,000 km or on condition.',
+  fuel:              '⚠ Critical K9K item — protects HP pump. Do NOT miss this. 40,000 km interval.',
+  brakes:            'Front pads ~46k km old — in wear window. Measure thickness before tehnički pregled.',
+  brakefluiddynamic: 'Last flushed Sep 2025 @ ~140,000 km. Every 2 years or 40,000 km.',
+  tyrerotation:      'Nokian Seasonproof 2. Rotate front↔rear every 10,000 km. Torque: 108 Nm.',
+  timing:            'SKF kit fitted Jul 2023 @ 116,315 km. Next ~276,000 km or Jul 2029. Confirm water pump included.',
+  coolant:           'Glaceol RX Type D. Changed Jul 2023. Next ~206,000 km or July 2028.',
+  glowplugs:         'Replaced Oct 2024 @ ~127,000 km. Next inspection ~227,000 km.',
+};
+
+const STATIC_HISTORY = [
+  { km: 152000, date: 'Apr 2026',      cat: 'cat-serbia',    label: 'Post-import Serbia', items: 'New Nokian Seasonproof 2 tyres (3PMSF) · Wiper blades replaced (front + rear)' },
+  { km: 145000, date: 'Late 2025',     cat: 'cat-electrical', label: 'Electrical / Drive', items: 'Alternator OAP decoupler/clutch pulley replaced' },
+  { km: 142000, date: 'Mar–Apr 2026',  cat: 'cat-service',   label: 'Full Service',       items: 'Engine oil 5W-30 · Oil filter · Air filter · Cabin/pollen filter' },
+  { km: 140000, date: 'Sep 2025',      cat: 'cat-brakes',    label: 'Brakes',             items: 'Brake fluid flush' },
+  { km: 139000, date: 'Mid 2025',      cat: 'cat-suspension', label: 'Suspension',        items: 'Steering rack rebuild' },
+  { km: 132000, date: '~2025',         cat: 'cat-service',   label: 'Filters',            items: 'Fuel filter replaced' },
+  { km: 127000, date: 'Oct 2024',      cat: 'cat-electrical', label: 'Ignition',          items: '4× glow plugs replaced' },
+  { km: 122000, date: 'Mid–Late 2024', cat: 'cat-suspension', label: 'Suspension',        items: 'Front struts · Coil springs · Strut top mounts & bearings (all 4 corners)' },
+  { km: 116315, date: '14 Jul 2023',   cat: 'cat-timing',    label: 'Timing / Cooling',   items: 'Timing belt kit (OEM SKF) · Poly-V accessory belt · Coolant change (Glaceol RX Type D)' },
+  { km: 113401, date: '09 May 2023',   cat: 'cat-electrical', label: 'A/C',               items: 'A/C service — R1234YF refrigerant · Condenser hose · Cabin filter · Sanitisation' },
+  { km: 106006, date: '23 Aug 2022',   cat: 'cat-service',   label: 'Full Tagliando',     items: 'Oil 5W-30 (Selenia) · Oil/air/cabin filters · Front + rear brake pads · Brake fluid · Wiper blades · Service reset' },
+  { km:  91755, date: '30 Jul 2021',   cat: 'cat-service',   label: 'Service',            items: 'Oil 5W-30 · Oil/air/cabin filters · Brake fluid · Service reset' },
+  { km:  63640, date: '02 Sep 2019',   cat: 'cat-service',   label: 'Service + Brakes',   items: 'Oil 5W-30 · Oil/air/cabin filters · Brake pads · Front disc resurfacing · Wipers' },
+  { km:  31945, date: '04 May 2018',   cat: 'cat-service',   label: 'Full Service',       items: 'Oil 5W-30 · Oil/air/cabin/fuel filters (full filter set)' },
+];
+
+const CAT_COLOR = {
+  'cat-service':    'var(--accent)',
+  'cat-brakes':     'var(--red)',
+  'cat-timing':     'var(--blue)',
+  'cat-suspension': 'var(--green)',
+  'cat-electrical': '#a078f0',
+  'cat-serbia':     'var(--orange)',
+  'cat-custom':     'var(--blue)',
+};
+
+// ═══════════════════════════════════════════════
+// SNAPSHOT HELPERS
+// ═══════════════════════════════════════════════
+function buildSnapshot() {
+  return {
+    version:      1,
+    km:           currentKm,
+    service_last: Object.fromEntries(SERVICES.map(s => [s.id, s.lastKm])),
+    custom_log:   customLog,
+    saved_entries: savedEntries,
+    updated_at:   new Date().toISOString(),
+  };
+}
+
+function applySnapshot(s) {
+  if (!s) return;
+  if (s.km)            currentKm = s.km;
+  if (s.service_last)  SERVICES.forEach(svc => { if (s.service_last[svc.id] !== undefined) svc.lastKm = s.service_last[svc.id]; });
+  if (s.custom_log)    customLog    = s.custom_log;
+  if (s.saved_entries) savedEntries = s.saved_entries;
+}
+
+// ═══════════════════════════════════════════════
+// LOCALSTORAGE — fast local persistence
+// ═══════════════════════════════════════════════
+function saveLocal(snapshot) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)); } catch(e) {}
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    return (s && s.version === 1) ? s : null;
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════════
+// SUPABASE — cloud persistence
+// ═══════════════════════════════════════════════
+const SB_HEADERS = {
+  'apikey':        SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type':  'application/json',
+  'Prefer':        'resolution=merge-duplicates',
+};
+
+async function loadFromCloud() {
+  if (!CLOUD_ENABLED) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/car_state?id=eq.${ROW_ID}&select=*`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn('Supabase load error', res.status, errText);
+      setSyncStatus('error', res.status);
+      return null;
+    }
+    const rows = await res.json();
+    return (rows && rows.length > 0) ? rows[0] : null;
+  } catch(e) { console.warn('Supabase load failed (network):', e); return null; }
+}
+
+async function saveToCloud(snapshot) {
+  if (!CLOUD_ENABLED) return;
+  // Strip JS-only fields that aren't columns in the Supabase table
+  const { version, ...cloudPayload } = snapshot;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/car_state`, {
+      method:  'POST',
+      headers: SB_HEADERS,
+      body:    JSON.stringify({ id: ROW_ID, ...cloudPayload }),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn('Supabase save error', res.status, errText);
+      setSyncStatus('error', res.status);
+      return;
+    }
+    setSyncStatus('saved');
+  } catch(e) {
+    console.warn('Supabase save failed (network):', e);
+    setSyncStatus('error', 'network');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// UNIFIED SAVE
+// ═══════════════════════════════════════════════
+function saveState() {
+  const snap = buildSnapshot();
+  saveLocal(snap);         // instant
+  saveToCloud(snap);       // async, background
+  flashSaved();
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+async function clearState() {
+  if (!confirm('Reset ALL saved data to factory defaults?\n\nThis clears your odometer, service log, and all custom entries.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  if (CLOUD_ENABLED) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/car_state?id=eq.${ROW_ID}`, {
+        method: 'DELETE', headers: SB_HEADERS,
+      });
+    } catch(e) {}
+  }
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════
+// STATUS TOASTS
+// ═══════════════════════════════════════════════
+function getToast() {
+  let el = document.getElementById('save-indicator');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'save-indicator';
+    el.style.cssText = 'position:fixed;bottom:18px;right:18px;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;z-index:999;transition:opacity 0.4s;pointer-events:none;opacity:0;';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function flashSaved() {
+  const el = getToast();
+  el.textContent = CLOUD_ENABLED ? '☁️ Saved to cloud' : '💾 Saved locally';
+  el.style.background = 'rgba(76,175,125,0.92)';
+  el.style.color = '#fff';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+function setSyncStatus(state) {
+  const el = getToast();
+  if (state === 'saved') {
+    el.textContent = '☁️ Synced';
+    el.style.background = 'rgba(76,175,125,0.92)';
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, 1500);
+  } else if (state === 'syncing') {
+    el.textContent = '☁️ Syncing…';
+    el.style.background = 'rgba(74,158,221,0.9)';
+    el.style.opacity = '1';
+  } else if (state === 'error') {
+    const code = arguments[1] ? ` (${arguments[1]})` : '';
+    el.textContent = `⚠ Cloud sync failed${code} — check console`;
+    el.style.background = 'rgba(224,82,82,0.9)';
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, 5000);
+  }
+}
+
+// Setup banner (shown when credentials not yet configured)
+function maybeShowSetupBanner() {
+  if (CLOUD_ENABLED) return;
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:rgba(74,158,221,0.08);border:1px solid rgba(74,158,221,0.25);border-radius:10px;padding:10px 16px;margin:0 24px;max-width:1400px;margin-left:auto;margin-right:auto;margin-top:12px;display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text2);';
+  banner.innerHTML = '<span style="font-size:16px;flex-shrink:0;">☁️</span><span><strong style="color:var(--blue);">Cloud sync not configured.</strong> Data is saved locally to this browser only. Follow the Supabase setup guide, paste your credentials into the file, and redeploy to Netlify to enable cross-device sync.</span>';
+  const main = document.querySelector('.main');
+  if (main) main.parentNode.insertBefore(banner, main);
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function getStatus(used, interval, warnAt) {
+  const pct = used / interval;
+  if (pct >= 1.0)           return { label: 'OVERDUE', cls: 'pill-due',   bar: 'progress-due',   pct: 100 };
+  if (pct >= warnAt + 0.10) return { label: 'SOON',    cls: 'pill-soon',  bar: 'progress-soon',  pct: Math.round(pct * 100) };
+  if (pct >= warnAt)        return { label: 'WATCH',   cls: 'pill-watch', bar: 'progress-watch', pct: Math.round(pct * 100) };
+  return                           { label: 'OK',      cls: 'pill-ok',    bar: 'progress-ok',    pct: Math.round(pct * 100) };
+}
+
+function fmt(n) { return Number(n).toLocaleString(); }
+
+// ═══════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════
+const PREGLED_DATE = new Date('2026-08-26T08:00:00');
+
+function updateCountdown() {
+  const now  = new Date();
+  const diff = PREGLED_DATE - now;
+  if (diff <= 0) {
+    ['cd-days','cd2-days','cd2-hours','cd2-mins'].forEach(id => { document.getElementById(id).textContent = '0'; });
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000)  / 60000);
+  document.getElementById('cd-days').textContent  = d;
+  document.getElementById('cd2-days').textContent  = d;
+  document.getElementById('cd2-hours').textContent = h;
+  document.getElementById('cd2-mins').textContent  = m;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER — MAINTENANCE SCHEDULE
+// ═══════════════════════════════════════════════
+function renderServices(km) {
+  const container = document.getElementById('services-container');
+  container.innerHTML = '';
+  const sorted = [...SERVICES].sort((a, b) => ((km - b.lastKm) / b.intervalKm) - ((km - a.lastKm) / a.intervalKm));
+  sorted.forEach(s => {
+    const used      = km - s.lastKm;
+    const remaining = s.lastKm + s.intervalKm - km;
+    const nextKm    = s.lastKm + s.intervalKm;
+    const st        = getStatus(used, s.intervalKm, s.warnAt);
+    const div = document.createElement('div');
+    div.className = 'service-item';
+    div.innerHTML = `
+      <div class="service-top">
+        <span class="service-name">${s.name}</span>
+        <span class="service-pill ${st.cls}">${st.label}</span>
+      </div>
+      <div class="service-meta">
+        <span>📍 Last: ${fmt(s.lastKm)} km</span>
+        <span>📏 Every ${fmt(s.intervalKm)} km</span>
+        <span>${remaining > 0 ? '⏩ ' + fmt(remaining) + ' km remaining (next: ~' + fmt(nextKm) + ' km)' : '⚠ ' + fmt(Math.abs(remaining)) + ' km OVERDUE'}</span>
+      </div>
+      <div class="progress-track ${st.bar}">
+        <div class="progress-fill" style="width:${Math.min(st.pct, 100)}%"></div>
+      </div>
+      <div class="service-note">${SERVICE_NOTES[s.id] || ''}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER — TIMELINE
+// ═══════════════════════════════════════════════
+function renderTimeline() {
+  const container = document.getElementById('timeline-container');
+  container.innerHTML = '';
+  const allEntries = [
+    ...STATIC_HISTORY.map(e => ({ ...e })),
+    ...customLog.map(e => ({ ...e })),
+  ].sort((a, b) => b.km - a.km);
+
+  allEntries.forEach((e, i) => {
+    const color  = CAT_COLOR[e.cat] || 'var(--accent)';
+    const isLast = i === allEntries.length - 1;
+    const div = document.createElement('div');
+    div.className = 'tl-item';
+    div.innerHTML = `
+      <div class="tl-left">
+        <div class="tl-dot" style="border-color:${color};background:${color}22"></div>
+        ${isLast ? '' : '<div class="tl-line"></div>'}
+      </div>
+      <div class="tl-body">
+        <div class="tl-header">
+          <span class="tl-km">${e.km >= 100000 ? '~' : ''}${fmt(e.km)} km</span>
+          ${e.date ? `<span class="tl-date">${e.date}</span>` : ''}
+        </div>
+        <span class="tl-cat ${e.cat}">${e.label}</span>
+        <div class="tl-items">${e.items}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER — LOG ENTRIES PANEL
+// ═══════════════════════════════════════════════
+function renderLogEntries() {
+  const entriesEl = document.getElementById('log-entries');
+  entriesEl.innerHTML = '';
+  if (!savedEntries.length) {
+    entriesEl.innerHTML = '<div class="log-empty" id="log-empty">No entries logged yet.</div>';
+    return;
+  }
+  // Show most recent first
+  [...savedEntries].reverse().forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.id = 'entry-' + e.id;
+    div.innerHTML = `
+      <span class="log-entry-label">${e.label}</span>
+      <span class="log-entry-km">${fmt(e.km)} km</span>
+      <span class="log-entry-del" title="Remove" onclick="removeLogEntry(${e.id})">✕</span>
+    `;
+    entriesEl.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER — URGENT BANNERS
+// ═══════════════════════════════════════════════
+function renderUrgent(km) {
+  const section = document.getElementById('urgent-section');
+  const banners = [];
+
+  SERVICES.forEach(s => {
+    const used = km - s.lastKm;
+    const pct  = used / s.intervalKm;
+    if (pct >= 1.0) {
+      banners.push({ icon: '🚨', title: `${s.name} — OVERDUE`, msg: `Last done at ${fmt(s.lastKm)} km. Now ${fmt(used)} km overdue. Service immediately.`, level: 'high' });
+    } else if (pct >= s.warnAt + 0.10) {
+      const rem = s.lastKm + s.intervalKm - km;
+      banners.push({ icon: '🔔', title: `${s.name} — Due Soon`, msg: `${fmt(rem)} km remaining (${Math.round(pct * 100)}% used). Plan service soon.`, level: 'med' });
+    }
+  });
+
+  const brakesUsed = km - SERVICES.find(s => s.id === 'brakes').lastKm;
+  if (brakesUsed > 45000 && !banners.find(b => b.title.includes('Brake Pads'))) {
+    banners.push({ icon: '🔔', title: 'Brake Pad Inspection Recommended', msg: `Pads are now ${fmt(brakesUsed)} km old. Inspect before tehnički pregled (26 Aug 2026).`, level: 'med' });
+  }
+
+  section.innerHTML = banners.map(b => `
+    <div class="urgent-banner" style="${b.level === 'high' ? '' : 'border-color:rgba(224,122,42,0.3);background:linear-gradient(135deg,rgba(224,122,42,0.1) 0%,rgba(200,168,75,0.05) 100%);'}">
+      <div class="urgent-icon">${b.icon}</div>
+      <div class="urgent-text">
+        <h3 style="${b.level === 'high' ? '' : 'color:var(--orange);'}">${b.title}</h3>
+        <p>${b.msg}</p>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// UPDATE MILEAGE
+// ═══════════════════════════════════════════════
+function updateMileage() {
+  const input = document.getElementById('odo-input');
+  const val   = parseInt(input.value, 10);
+  if (!val || val < currentKm) {
+    input.style.borderColor = 'var(--red)';
+    setTimeout(() => input.style.borderColor = '', 1200);
+    return;
+  }
+  currentKm = val;
+  const display = document.getElementById('odo-display');
+  display.innerHTML = fmt(currentKm) + '<span class="odo-unit">km</span>';
+  input.value = '';
+  renderAll();
+  saveState();
+  display.classList.remove('updated-flash');
+  void display.offsetWidth;
+  display.classList.add('updated-flash');
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function updateStats(km) {
+  const oilSvc     = SERVICES.find(s => s.id === 'oil');
+  const oilUsed    = km - oilSvc.lastKm;
+  const oilRem     = oilSvc.lastKm + oilSvc.intervalKm - km;
+  const timingUsed = km - SERVICES.find(s => s.id === 'timing').lastKm;
+  let minRem = Infinity;
+  SERVICES.forEach(s => { const r = (s.lastKm + s.intervalKm) - km; if (r > 0 && r < minRem) minRem = r; });
+
+  document.getElementById('stat-oil').textContent     = fmt(oilUsed);
+  document.getElementById('stat-oilrem').textContent  = oilRem > 0 ? fmt(oilRem) : 'NOW';
+  document.getElementById('stat-timing').textContent  = fmt(timingUsed);
+  document.getElementById('stat-nextbig').textContent = minRem > 0 ? fmt(minRem) : 'NOW';
+
+  const fuelSvc = SERVICES.find(s => s.id === 'fuel');
+  const fuelEl  = document.getElementById('alert-fuel');
+  if (fuelEl) fuelEl.textContent = `⬤ Monitor — next fuel filter at ~${fmt(fuelSvc.lastKm + fuelSvc.intervalKm)} km`;
+
+  const oilRemEl = document.getElementById('stat-oilrem');
+  oilRemEl.style.color = oilRem <= 0 ? 'var(--red)' : oilRem <= 2000 ? 'var(--orange)' : 'var(--accent2)';
+}
+
+// ═══════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════
+function renderAll() {
+  document.getElementById('odo-display').innerHTML = fmt(currentKm) + '<span class="odo-unit">km</span>';
+  renderServices(currentKm);
+  updateStats(currentKm);
+  renderUrgent(currentKm);
+  renderTimeline();
+  renderLogEntries();
+}
+
+// ═══════════════════════════════════════════════
+// SERVICE LOG
+// ═══════════════════════════════════════════════
+function onLogTypeChange() {
+  const t = document.getElementById('log-type').value;
+  document.getElementById('log-custom-row').style.display = (t === 'custom') ? 'block' : 'none';
+}
+
+function logService() {
+  const typeEl   = document.getElementById('log-type');
+  const kmEl     = document.getElementById('log-km');
+  const customEl = document.getElementById('log-custom-text');
+  const type     = typeEl.value;
+  const km       = parseInt(kmEl.value, 10);
+
+  if (!type)       { typeEl.style.borderColor = 'var(--red)';   setTimeout(() => typeEl.style.borderColor   = '', 1200); return; }
+  if (!km || km<1) { kmEl.style.borderColor   = 'var(--red)';   setTimeout(() => kmEl.style.borderColor     = '', 1200); return; }
+
+  let label;
+
+  const id = Date.now();
+
+  if (type === 'custom') {
+    const txt = customEl.value.trim();
+    if (!txt) { customEl.style.borderColor = 'var(--red)'; setTimeout(() => customEl.style.borderColor = '', 1200); return; }
+    label = txt;
+    customLog.push({ id, km, date: 'Logged', cat: 'cat-custom', label: 'Logged', items: txt });
+  } else {
+    const svc = SERVICES.find(s => s.id === type);
+    if (!svc) return;
+    if (km >= svc.lastKm) {
+      svc.lastKm = km;
+      customLog.push({ id, km, date: 'Logged', cat: 'cat-service', label: 'Service Log', items: svc.name.replace(/^\S+\s/, '') + ' — done at ' + fmt(km) + ' km' });
+    }
+    label = svc.name.replace(/^\S+\s/, '');
+  }
+
+  savedEntries.push({ id, label, km });
+
+  // Reset form
+  typeEl.value = ''; kmEl.value = ''; customEl.value = '';
+  document.getElementById('log-custom-row').style.display = 'none';
+
+  renderAll();
+  saveState();
+}
+
+function removeLogEntry(id) {
+  // Remove from savedEntries
+  const idx = savedEntries.findIndex(e => e.id === id);
+  if (idx !== -1) savedEntries.splice(idx, 1);
+
+  // Remove matching entry from customLog by its tagged id
+  const clIdx = customLog.findIndex(e => e.id === id);
+  if (clIdx !== -1) customLog.splice(clIdx, 1);
+
+  // If we removed a known-service entry, revert that service's lastKm to the
+  // highest remaining logged value for that service (or back to the default)
+  // — simple approach: recalculate all service lastKm from remaining savedEntries
+  SERVICES.forEach(svc => {
+    // Start from the default value for this service
+    const def = DEFAULT_SERVICES.find(d => d.id === svc.id);
+    let best = def ? def.lastKm : svc.lastKm;
+    // Apply any surviving customLog entries that match this service
+    customLog.forEach(cl => {
+      if (cl.cat === 'cat-service' && cl.items && cl.items.includes(svc.name.replace(/^\S+\s/, ''))) {
+        if (cl.km > best) best = cl.km;
+      }
+    });
+    svc.lastKm = best;
+  });
+
+  renderAll();
+  saveState();
+}
+
+function clearState() {
+  if (!confirm('Reset ALL saved data to factory defaults?\n\nThis clears your odometer, service log, and all custom entries.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════
+// KEY BINDINGS
+// ═══════════════════════════════════════════════
+document.getElementById('odo-input').addEventListener('keydown', e => { if (e.key === 'Enter') updateMileage(); });
+document.getElementById('log-km').addEventListener('keydown',   e => { if (e.key === 'Enter') logService(); });
+
+// ═══════════════════════════════════════════════
+// BOOT
+// Cloud wins if newer than local; local used as instant paint while cloud loads.
+// ═══════════════════════════════════════════════
+(async function boot() {
+  // 1. Paint instantly from localStorage (zero latency)
+  const local = loadLocal();
+  if (local) applySnapshot(local);
+  renderAll();
+  maybeShowSetupBanner();
+  updateCountdown();
+  setInterval(updateCountdown, 30000);
+
+  // 2. Fetch cloud state in background
+  if (!CLOUD_ENABLED) return;
+  setSyncStatus('syncing');
+  const cloud = await loadFromCloud();
+  if (!cloud) { setSyncStatus('error'); return; }
+
+  // 3. Apply cloud if it's newer (or if no local state existed)
+  const localTs = local && local.updated_at ? new Date(local.updated_at) : new Date(0);
+  const cloudTs = cloud.updated_at          ? new Date(cloud.updated_at) : new Date(0);
+  if (cloudTs > localTs) {
+    applySnapshot(cloud);
+    saveLocal(buildSnapshot()); // cache cloud state locally
+    renderAll();
+  }
+  setSyncStatus('saved');
+})();
+</script>
+
+</body>
+</html>
