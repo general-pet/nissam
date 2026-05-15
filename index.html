@@ -686,9 +686,14 @@ async function loadFromCloud() {
   try {
     const data = await upstashPipeline([['GET', CACHE_KEY]]);
     const result = data[0];
-    if (result.error) { console.warn('Upstash GET error:', result.error); setSyncStatus('error', 'redis'); return null; }
-    console.log('[Upstash] GET →', result.result ? 'data found' : 'empty (no data stored yet)');
-    return result.result ? JSON.parse(result.result) : null;
+    if (result.error) { console.warn('[Upstash] GET error:', result.error); setSyncStatus('error', 'redis'); return null; }
+    if (!result.result) { console.log('[Upstash] GET → empty (nothing stored yet)'); return null; }
+    // Parse — handle legacy double-serialized data from earlier broken saves
+    let parsed = JSON.parse(result.result);
+    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+    if (typeof parsed !== 'object' || parsed === null) { console.warn('[Upstash] GET → bad data format, ignoring'); return null; }
+    console.log('[Upstash] GET → ok, km=' + parsed.km + ', updated_at=' + parsed.updated_at);
+    return parsed;
   } catch(e) { console.warn('[Upstash] load failed:', e); setSyncStatus('error', 'network'); return null; }
 }
 
@@ -1245,20 +1250,22 @@ document.getElementById('log-km').addEventListener('keydown',   e => { if (e.key
   updateCountdown();
   setInterval(updateCountdown, 30000);
 
-  // 2. Fetch cloud state in background
+  // 2. Fetch cloud state — cloud is always source of truth for this single-user dashboard
   if (!CLOUD_ENABLED) return;
   setSyncStatus('syncing');
   const cloud = await loadFromCloud();
-  if (!cloud) { setSyncStatus('error'); return; }
-
-  // 3. Apply cloud if it's newer (or if no local state existed)
-  const localTs = local && local.updated_at ? new Date(local.updated_at) : new Date(0);
-  const cloudTs = cloud.updated_at          ? new Date(cloud.updated_at) : new Date(0);
-  if (cloudTs > localTs) {
-    applySnapshot(cloud);
-    saveLocal(buildSnapshot()); // cache cloud state locally
-    renderAll();
+  if (!cloud) {
+    // Nothing stored yet in cloud — push local state up so other devices can sync
+    if (local) { saveToCloud(local); console.log('[boot] no cloud data — pushed local state up'); }
+    setSyncStatus('saved');
+    return;
   }
+
+  // 3. Always apply cloud — then save merged state back to localStorage
+  console.log('[boot] applying cloud snapshot, km=' + cloud.km);
+  applySnapshot(cloud);
+  saveLocal(buildSnapshot());
+  renderAll();
   setSyncStatus('saved');
 })();
 </script>
