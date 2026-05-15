@@ -688,9 +688,12 @@ async function loadFromCloud() {
     const result = data[0];
     if (result.error) { console.warn('[Upstash] GET error:', result.error); setSyncStatus('error', 'redis'); return null; }
     if (!result.result) { console.log('[Upstash] GET → empty (nothing stored yet)'); return null; }
-    // Parse — handle legacy double-serialized data from earlier broken saves
+    // Parse — handle legacy formats from earlier broken saves:
+    //   - double-serialized string: JSON.parse twice
+    //   - array-wrapped value: ["JSON_string"] — take first element
     let parsed = JSON.parse(result.result);
-    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+    if (Array.isArray(parsed))      parsed = JSON.parse(parsed[0]);  // unwrap ["JSON_string"]
+    if (typeof parsed === 'string') parsed = JSON.parse(parsed);      // unwrap double-stringify
     if (typeof parsed !== 'object' || parsed === null) { console.warn('[Upstash] GET → bad data format, ignoring'); return null; }
     console.log('[Upstash] GET → ok, km=' + parsed.km + ', updated_at=' + parsed.updated_at);
     return parsed;
@@ -1261,10 +1264,12 @@ document.getElementById('log-km').addEventListener('keydown',   e => { if (e.key
     return;
   }
 
-  // 3. Always apply cloud — then save merged state back to localStorage
+  // 3. Always apply cloud — then save merged state back to both stores
   console.log('[boot] applying cloud snapshot, km=' + cloud.km);
   applySnapshot(cloud);
-  saveLocal(buildSnapshot());
+  const merged = buildSnapshot();
+  saveLocal(merged);
+  saveToCloud(merged); // re-write with clean format, fixes any legacy encoding
   renderAll();
   setSyncStatus('saved');
 })();
