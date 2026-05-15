@@ -674,8 +674,13 @@ async function loadFromCloud() {
     const res = await fetch(`${UPSTASH_URL}/get/${CACHE_KEY}`, {
       headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}` }
     });
-    if (!res.ok) { setSyncStatus('error', res.status); return null; }
     const data = await res.json();
+    if (!res.ok || data.error) {
+      console.warn('Upstash load error:', data);
+      setSyncStatus('error', res.status);
+      return null;
+    }
+    console.log('Upstash GET result:', data.result ? 'data found' : 'empty');
     return data.result ? JSON.parse(data.result) : null;
   } catch(e) { console.warn('Upstash load failed:', e); return null; }
 }
@@ -685,12 +690,18 @@ async function saveToCloud(snapshot) {
   // Strip version field (localStorage-only migration marker)
   const { version, ...payload } = snapshot;
   try {
+    // Upstash REST: POST /set/KEY body must be a JSON array [value]
     const res = await fetch(`${UPSTASH_URL}/set/${CACHE_KEY}`, {
       method:  'POST',
       headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-      body:    JSON.stringify(JSON.stringify(payload)),
+      body:    JSON.stringify([JSON.stringify(payload)]),
     });
-    if (!res.ok) { setSyncStatus('error', res.status); return; }
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      console.warn('Upstash save error:', data);
+      setSyncStatus('error', res.status);
+      return;
+    }
     setSyncStatus('saved');
   } catch(e) {
     console.warn('Upstash save failed:', e);
