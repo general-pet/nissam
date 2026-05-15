@@ -303,6 +303,7 @@
         <span class="badge">Serbia · Belgrade</span>
         <span class="badge">10,000 km Oil Interval</span>
         <span class="badge">All-Season Tyres</span>
+        <span class="badge" id="cloud-badge" style="cursor:default;">☁️ Connecting…</span>
       </div>
     </div>
   </div>
@@ -665,48 +666,42 @@ function loadLocal() {
 }
 
 // ═══════════════════════════════════════════════
-// UPSTASH REDIS — cloud persistence
-// Simple GET/SET REST API, no table schema needed.
+// UPSTASH REDIS — cloud persistence via /pipeline endpoint
+// Pipeline is the safest, unambiguous Upstash REST format:
+// body = array of [COMMAND, arg1, arg2, ...]
+// response = array of {result: value} objects
 // ═══════════════════════════════════════════════
+async function upstashPipeline(commands) {
+  const res = await fetch(`${UPSTASH_URL}/pipeline`, {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
+    body:    JSON.stringify(commands),
+  });
+  if (!res.ok) throw new Error(`Upstash HTTP ${res.status}`);
+  return res.json(); // array of {result, error}
+}
+
 async function loadFromCloud() {
   if (!CLOUD_ENABLED) return null;
   try {
-    const res = await fetch(`${UPSTASH_URL}/get/${CACHE_KEY}`, {
-      headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}` }
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      console.warn('Upstash load error:', data);
-      setSyncStatus('error', res.status);
-      return null;
-    }
-    console.log('Upstash GET result:', data.result ? 'data found' : 'empty');
-    return data.result ? JSON.parse(data.result) : null;
-  } catch(e) { console.warn('Upstash load failed:', e); return null; }
+    const data = await upstashPipeline([['GET', CACHE_KEY]]);
+    const result = data[0];
+    if (result.error) { console.warn('Upstash GET error:', result.error); setSyncStatus('error', 'redis'); return null; }
+    console.log('[Upstash] GET →', result.result ? 'data found' : 'empty (no data stored yet)');
+    return result.result ? JSON.parse(result.result) : null;
+  } catch(e) { console.warn('[Upstash] load failed:', e); setSyncStatus('error', 'network'); return null; }
 }
 
 async function saveToCloud(snapshot) {
   if (!CLOUD_ENABLED) return;
-  // Strip version field (localStorage-only migration marker)
-  const { version, ...payload } = snapshot;
+  const { version, ...payload } = snapshot; // strip localStorage-only field
   try {
-    // Upstash REST: POST /set/KEY body must be a JSON array [value]
-    const res = await fetch(`${UPSTASH_URL}/set/${CACHE_KEY}`, {
-      method:  'POST',
-      headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-      body:    JSON.stringify([JSON.stringify(payload)]),
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      console.warn('Upstash save error:', data);
-      setSyncStatus('error', res.status);
-      return;
-    }
+    const data = await upstashPipeline([['SET', CACHE_KEY, JSON.stringify(payload)]]);
+    const result = data[0];
+    if (result.error) { console.warn('Upstash SET error:', result.error); setSyncStatus('error', 'redis'); return; }
+    console.log('[Upstash] SET → OK');
     setSyncStatus('saved');
-  } catch(e) {
-    console.warn('Upstash save failed:', e);
-    setSyncStatus('error', 'network');
-  }
+  } catch(e) { console.warn('[Upstash] save failed:', e); setSyncStatus('error', 'network'); }
 }
 
 // ═══════════════════════════════════════════════
@@ -726,11 +721,7 @@ async function clearState() {
   if (!confirm('Reset ALL saved data to factory defaults?\n\nThis clears your odometer, service log, and all custom entries.')) return;
   localStorage.removeItem(STORAGE_KEY);
   if (CLOUD_ENABLED) {
-    try {
-      await fetch(`${UPSTASH_URL}/del/${CACHE_KEY}`, {
-        headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}` }
-      });
-    } catch(e) {}
+    try { await upstashPipeline([['DEL', CACHE_KEY]]); } catch(e) {}
   }
   location.reload();
 }
@@ -760,17 +751,20 @@ function flashSaved() {
 }
 
 function setSyncStatus(state) {
-  const el = getToast();
+  const el    = getToast();
+  const badge = document.getElementById('cloud-badge');
   if (state === 'saved') {
     el.textContent = '☁️ Synced';
     el.style.background = 'rgba(76,175,125,0.92)';
     el.style.opacity = '1';
     clearTimeout(el._t);
     el._t = setTimeout(() => { el.style.opacity = '0'; }, 1500);
+    if (badge) { badge.textContent = '☁️ Synced'; badge.style.color = 'var(--green)'; }
   } else if (state === 'syncing') {
     el.textContent = '☁️ Syncing…';
     el.style.background = 'rgba(74,158,221,0.9)';
     el.style.opacity = '1';
+    if (badge) { badge.textContent = '☁️ Syncing…'; badge.style.color = 'var(--blue)'; }
   } else if (state === 'error') {
     const code = arguments[1] ? ` (${arguments[1]})` : '';
     el.textContent = `⚠ Cloud sync failed${code} — check console`;
@@ -778,6 +772,7 @@ function setSyncStatus(state) {
     el.style.opacity = '1';
     clearTimeout(el._t);
     el._t = setTimeout(() => { el.style.opacity = '0'; }, 5000);
+    if (badge) { badge.textContent = `⚠ Sync error${code}`; badge.style.color = 'var(--red)'; }
   }
 }
 
