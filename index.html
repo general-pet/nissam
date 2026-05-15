@@ -540,14 +540,13 @@
 <!-- ══════════════════════════════════════════════ JAVASCRIPT ═══ -->
 <script>
 // ═══════════════════════════════════════════════
-// ☁️  SUPABASE CONFIG
-// Replace both values after completing the Supabase setup (see guide).
-// The anon key is safe to publish — Supabase RLS controls access.
+// ☁️  UPSTASH REDIS CONFIG
+// REST API — no SDK needed, works on any host (GitHub Pages, Netlify, etc.)
 // ═══════════════════════════════════════════════
-const SUPABASE_URL = 'https://aakvacyzlxmuhahftoqy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFha3ZhY3l6bHhtdWhhaGZ0b3F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzkzMjEsImV4cCI6MjA5MzU1NTMyMX0.IdjgQ7RyOZ8fNyOpaVa8QVzL_ziskkMWhdmrCefQFCk';
-const ROW_ID       = 'SJNFAAJ11U1704861';  // VIN — unique row identifier
-const CLOUD_ENABLED = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+const UPSTASH_URL   = 'https://prime-barnacle-41499.upstash.io';
+const UPSTASH_TOKEN = 'AaIbAAIgcDE5Y2U1MmVmMzFiNTk0MDJlOGYwNGIwMjc4NDZlMDA3Yw';
+const CACHE_KEY     = 'qashqai_SJNFAAJ11U1704861';
+const CLOUD_ENABLED = true;
 
 // ═══════════════════════════════════════════════
 // PERSISTENCE KEY (localStorage fallback)
@@ -666,51 +665,35 @@ function loadLocal() {
 }
 
 // ═══════════════════════════════════════════════
-// SUPABASE — cloud persistence
+// UPSTASH REDIS — cloud persistence
+// Simple GET/SET REST API, no table schema needed.
 // ═══════════════════════════════════════════════
-const SB_HEADERS = {
-  'apikey':        SUPABASE_KEY,
-  'Authorization': 'Bearer ' + SUPABASE_KEY,
-  'Content-Type':  'application/json',
-  'Prefer':        'resolution=merge-duplicates',
-};
-
 async function loadFromCloud() {
   if (!CLOUD_ENABLED) return null;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/car_state?id=eq.${ROW_ID}&select=*`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    const res = await fetch(`${UPSTASH_URL}/get/${CACHE_KEY}`, {
+      headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}` }
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn('Supabase load error', res.status, errText);
-      setSyncStatus('error', res.status);
-      return null;
-    }
-    const rows = await res.json();
-    return (rows && rows.length > 0) ? rows[0] : null;
-  } catch(e) { console.warn('Supabase load failed (network):', e); return null; }
+    if (!res.ok) { setSyncStatus('error', res.status); return null; }
+    const data = await res.json();
+    return data.result ? JSON.parse(data.result) : null;
+  } catch(e) { console.warn('Upstash load failed:', e); return null; }
 }
 
 async function saveToCloud(snapshot) {
   if (!CLOUD_ENABLED) return;
-  // Strip JS-only fields that aren't columns in the Supabase table
-  const { version, ...cloudPayload } = snapshot;
+  // Strip version field (localStorage-only migration marker)
+  const { version, ...payload } = snapshot;
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/car_state`, {
+    const res = await fetch(`${UPSTASH_URL}/set/${CACHE_KEY}`, {
       method:  'POST',
-      headers: SB_HEADERS,
-      body:    JSON.stringify({ id: ROW_ID, ...cloudPayload }),
+      headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify(JSON.stringify(payload)),
     });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn('Supabase save error', res.status, errText);
-      setSyncStatus('error', res.status);
-      return;
-    }
+    if (!res.ok) { setSyncStatus('error', res.status); return; }
     setSyncStatus('saved');
   } catch(e) {
-    console.warn('Supabase save failed (network):', e);
+    console.warn('Upstash save failed:', e);
     setSyncStatus('error', 'network');
   }
 }
@@ -733,8 +716,8 @@ async function clearState() {
   localStorage.removeItem(STORAGE_KEY);
   if (CLOUD_ENABLED) {
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/car_state?id=eq.${ROW_ID}`, {
-        method: 'DELETE', headers: SB_HEADERS,
+      await fetch(`${UPSTASH_URL}/del/${CACHE_KEY}`, {
+        headers: { 'Authorization': `Bearer ${UPSTASH_TOKEN}` }
       });
     } catch(e) {}
   }
@@ -1087,12 +1070,6 @@ function removeLogEntry(id) {
 
   renderAll();
   saveState();
-}
-
-function clearState() {
-  if (!confirm('Reset ALL saved data to factory defaults?\n\nThis clears your odometer, service log, and all custom entries.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
 }
 
 // ═══════════════════════════════════════════════
