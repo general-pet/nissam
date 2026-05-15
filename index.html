@@ -425,18 +425,18 @@
           <div class="insp-row"><span class="label">Date</span><span class="value">26 August 2026</span></div>
           <div class="insp-row"><span class="label">Type</span><span class="value">Annual Serbian registration</span></div>
           <div class="insp-checklist">
-            <div class="insp-check pass">Tyres — Nokian Seasonproof 2 (3PMSF) · new</div>
-            <div class="insp-check pass">Wiper blades — replaced Apr 2026</div>
+            <div class="insp-check pass" id="insp-tyres">Tyres — Nokian Seasonproof 2 (3PMSF) · new</div>
+            <div class="insp-check pass" id="insp-wipers">Wiper blades — replaced Apr 2026</div>
             <div class="insp-check pass" id="insp-oil">Engine oil + filters — fresh (~142k km)</div>
-            <div class="insp-check pass">Brake fluid — flushed Sep 2025</div>
-            <div class="insp-check pass">Glow plugs — replaced Oct 2024</div>
+            <div class="insp-check pass" id="insp-brakefluid">Brake fluid — flushed Sep 2025</div>
+            <div class="insp-check pass" id="insp-glowplugs">Glow plugs — replaced Oct 2024</div>
             <div class="insp-check pass">Front struts, springs, top mounts — new ~122k km</div>
             <div class="insp-check pass">Steering rack — rebuilt ~139k km</div>
-            <div class="insp-check warn">Brake discs / pads — in wear window, measure at pre-check</div>
-            <div class="insp-check warn">Lower control arm bushings — original, inspect on lift</div>
+            <div class="insp-check warn" id="insp-brakes">Brake discs / pads — in wear window, measure at pre-check</div>
+            <div class="insp-check warn" id="insp-bushings">Lower control arm bushings — original, inspect on lift</div>
             <div class="insp-check warn">Rear dampers — original at 152k km, bounce test needed</div>
             <div class="insp-check warn">Headlight aim — verify alignment</div>
-            <div class="insp-check fail">Brake pads priority — schedule pre-inspection visit 3 wks before</div>
+            <div class="insp-check fail" id="insp-brakepriority">Brake pads priority — schedule pre-inspection visit 3 wks before</div>
           </div>
         </div>
       </div>
@@ -467,7 +467,7 @@
           <div class="alert-body">
             <div class="alert-title">EGR Valve & Cooler Clogging</div>
             <div class="alert-desc">EGR clogging causes rough idle, power loss and increased DPF load. Common on K9K from 80k km+. Clean every 40–60k km.</div>
-            <div class="alert-status done">✓ Done — EGR recently cleaned</div>
+            <div class="alert-status done" id="alert-egr">✓ Done — EGR recently cleaned</div>
           </div>
         </div>
         <div class="alert-item">
@@ -475,7 +475,7 @@
           <div class="alert-body">
             <div class="alert-title">DPF Clogging / Ash Build-up</div>
             <div class="alert-desc">DPF passive regen requires sustained highway speeds. City-only driving leads to premature blocking. Ash (irreversible) accumulates over lifetime.</div>
-            <div class="alert-status monitor">⬤ 40% ash level — highway driving profile is ideal</div>
+            <div class="alert-status monitor" id="alert-dpf">⬤ 40% ash level — highway driving profile is ideal</div>
           </div>
         </div>
         <div class="alert-item">
@@ -483,7 +483,7 @@
           <div class="alert-body">
             <div class="alert-title">Timing Belt Tensioner Bearing</div>
             <div class="alert-desc">Tensioner bearings on K9K can fail before the belt wears out. Replacement is mandatory with every belt change. Failure = bent valves.</div>
-            <div class="alert-status done">✓ SKF kit fitted July 2023 @ 116,315 km</div>
+            <div class="alert-status done" id="alert-timing">✓ SKF kit fitted July 2023 @ 116,315 km</div>
           </div>
         </div>
         <div class="alert-item">
@@ -491,7 +491,7 @@
           <div class="alert-body">
             <div class="alert-title">Water Pump (with Timing Belt)</div>
             <div class="alert-desc">Water pump should always be replaced with the timing belt. If skipped, pump failure at ~150–180k km forces a full belt job again.</div>
-            <div class="alert-status watch">⚠ Verify if water pump was changed in the 2023 belt job</div>
+            <div class="alert-status watch" id="alert-waterpump">⚠ Verify if water pump was changed in the 2023 belt job</div>
           </div>
         </div>
         <div class="alert-item">
@@ -499,7 +499,7 @@
           <div class="alert-body">
             <div class="alert-title">Alternator OAP Decoupler Wear</div>
             <div class="alert-desc">The one-way alternator pulley (OAP) wears on K9K, causing belt squeal or rattle on cold start / shutdown. Very common at 100–130k km.</div>
-            <div class="alert-status done">✓ Replaced ~145,000 km</div>
+            <div class="alert-status done" id="alert-oap">✓ Replaced ~145,000 km</div>
           </div>
         </div>
         <div class="alert-item">
@@ -507,7 +507,7 @@
           <div class="alert-body">
             <div class="alert-title">Control Arm Bushings & Ball Joints</div>
             <div class="alert-desc">Front lower control arm bushings crack and ball joints wear from ~100k km. Often missed when only struts are replaced. Common pregled fail point.</div>
-            <div class="alert-status watch">⚠ Original — inspect on lift at pre-inspection visit</div>
+            <div class="alert-status watch" id="alert-bushings">⚠ Original — inspect on lift at pre-inspection visit</div>
           </div>
         </div>
         <div class="alert-item">
@@ -515,7 +515,7 @@
           <div class="alert-body">
             <div class="alert-title">Oil Consumption (K9K)</div>
             <div class="alert-desc">K9K engines can consume up to 0.5 L/1000 km when worn. Check dipstick every 3,000–4,000 km. Always top up with 5W-30 ACEA C3/C4.</div>
-            <div class="alert-status monitor">⬤ Check dipstick regularly between services</div>
+            <div class="alert-status monitor" id="alert-oilconsumption">⬤ Check dipstick regularly between services</div>
           </div>
         </div>
       </div>
@@ -987,6 +987,153 @@ function updateStats(km) {
 // ═══════════════════════════════════════════════
 // RENDER ALL
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// DYNAMIC SECTION UPDATER
+// Runs after every renderAll() — maps logged services and custom
+// keywords to the inspection checklist and K9K issues table.
+// ═══════════════════════════════════════════════
+function setInsp(id, cls, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'insp-check ' + cls;
+  el.textContent = text;
+}
+function setAlert(id, cls, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'alert-status ' + cls;
+  el.textContent = text;
+}
+
+function updateDynamicSections() {
+  // Build a searchable corpus from all log entries
+  const logText = [
+    ...customLog.map(e => (e.items || '') + ' ' + (e.label || '')),
+    ...savedEntries.map(e => e.label || ''),
+  ].join(' ').toLowerCase();
+
+  const hasKw = (...kws) => kws.some(kw => logText.includes(kw.toLowerCase()));
+
+  // Helpers for known services
+  const svcObj  = id => SERVICES.find(s => s.id === id);
+  const svcKm   = id => (svcObj(id) || {}).lastKm || 0;
+  const defKm   = id => (DEFAULT_SERVICES.find(s => s.id === id) || {}).lastKm || 0;
+  const updated  = id => svcKm(id) > defKm(id);
+
+  // Most-recent km from custom log matching keywords
+  const latestKmKw = (...kws) => {
+    const matches = customLog.filter(e =>
+      kws.some(kw => ((e.items||'')+(e.label||'')).toLowerCase().includes(kw.toLowerCase()))
+    );
+    return matches.length ? Math.max(...matches.map(e => e.km)) : 0;
+  };
+
+  // ── ROADWORTHINESS INSPECTION CHECKLIST ──────────────
+  // Tyres
+  if (hasKw('tyre', 'tire', 'wheel')) {
+    const km = latestKmKw('tyre', 'tire', 'wheel') || currentKm;
+    setInsp('insp-tyres', 'pass', `Tyres — replaced at ${fmt(km)} km (logged)`);
+  }
+
+  // Wiper blades
+  if (hasKw('wiper')) {
+    const km = latestKmKw('wiper') || currentKm;
+    setInsp('insp-wipers', 'pass', `Wiper blades — replaced at ${fmt(km)} km (logged)`);
+  }
+
+  // Engine oil + filters (oil / cabin / air service)
+  const oilKm = Math.max(svcKm('oil'), svcKm('cabin'), svcKm('air'));
+  if (oilKm > Math.max(defKm('oil'), defKm('cabin'), defKm('air'))) {
+    setInsp('insp-oil', 'pass', `Engine oil + filters — fresh (~${fmt(oilKm)} km)`);
+  }
+
+  // Brake fluid
+  if (updated('brakefluiddynamic')) {
+    setInsp('insp-brakefluid', 'pass', `Brake fluid — flushed at ${fmt(svcKm('brakefluiddynamic'))} km`);
+  } else if (hasKw('brake fluid', 'brakefluide')) {
+    const km = latestKmKw('brake fluid') || currentKm;
+    setInsp('insp-brakefluid', 'pass', `Brake fluid — flushed at ${fmt(km)} km (logged)`);
+  }
+
+  // Glow plugs
+  if (updated('glowplugs') || hasKw('glow plug', 'glowplug')) {
+    const km = updated('glowplugs') ? svcKm('glowplugs') : (latestKmKw('glow plug', 'glowplug') || currentKm);
+    setInsp('insp-glowplugs', 'pass', `Glow plugs — replaced at ${fmt(km)} km`);
+  }
+
+  // Brake pads / discs
+  if (updated('brakes') || hasKw('brake pad', 'brake disc', 'brakepads')) {
+    const km = updated('brakes') ? svcKm('brakes') : (latestKmKw('brake pad', 'brake disc') || currentKm);
+    setInsp('insp-brakes', 'pass', `Brake discs / pads — replaced at ${fmt(km)} km ✓`);
+    setInsp('insp-brakepriority', 'pass', `Brake pads — freshly replaced, ready for inspection`);
+  } else {
+    // Recalculate urgency from current age
+    const age = currentKm - svcKm('brakes');
+    if (age > 45000) {
+      setInsp('insp-brakes', 'fail', `Brake pads — overdue (${fmt(age)} km since last change), replace ASAP`);
+    } else if (age > 35000) {
+      setInsp('insp-brakes', 'warn', `Brake discs / pads — ${fmt(age)} km since last — measure thickness before inspection`);
+    }
+  }
+
+  // Control arm bushings / ball joints
+  if (hasKw('bushing', 'control arm', 'ball joint')) {
+    const km = latestKmKw('bushing', 'control arm', 'ball joint') || currentKm;
+    setInsp('insp-bushings', 'pass', `Lower control arm bushings — serviced at ${fmt(km)} km ✓`);
+  }
+
+  // ── KNOWN K9K / J11 ISSUES ───────────────────────────
+  // HP Fuel Pump risk → driven by fuel filter age
+  {
+    const fs    = svcObj('fuel');
+    const next  = fs.lastKm + fs.intervalKm;
+    const pct   = (currentKm - fs.lastKm) / fs.intervalKm;
+    if (pct >= 1.0) {
+      setAlert('alert-fuel', 'watch', `⚠ OVERDUE — fuel filter last done at ${fmt(fs.lastKm)} km — replace immediately!`);
+    } else if (pct >= 0.65) {
+      setAlert('alert-fuel', 'watch', `⚠ Due soon — next fuel filter at ~${fmt(next)} km (${Math.round(pct*100)}% through interval)`);
+    } else {
+      setAlert('alert-fuel', 'monitor', `⬤ Monitor — next fuel filter at ~${fmt(next)} km`);
+    }
+  }
+
+  // EGR
+  if (hasKw('egr')) {
+    const km = latestKmKw('egr') || currentKm;
+    setAlert('alert-egr', 'done', `✓ Done — EGR serviced at ${fmt(km)} km`);
+  }
+
+  // DPF
+  if (hasKw('dpf', 'particulate filter')) {
+    const km = latestKmKw('dpf', 'particulate filter') || currentKm;
+    setAlert('alert-dpf', 'done', `✓ Done — DPF serviced at ${fmt(km)} km`);
+  }
+
+  // Timing belt
+  if (updated('timing') || hasKw('timing belt', 'cambelt')) {
+    const km = updated('timing') ? svcKm('timing') : (latestKmKw('timing belt', 'cambelt') || currentKm);
+    setAlert('alert-timing', 'done', `✓ SKF kit fitted @ ${fmt(km)} km`);
+  }
+
+  // Water pump
+  if (hasKw('water pump', 'waterpump')) {
+    const km = latestKmKw('water pump', 'waterpump') || currentKm;
+    setAlert('alert-waterpump', 'done', `✓ Water pump replaced at ${fmt(km)} km`);
+  }
+
+  // Alternator OAP / decoupler
+  if (hasKw('alternator', 'oap', 'decoupler', 'clutch pulley')) {
+    const km = latestKmKw('alternator', 'oap', 'decoupler', 'clutch pulley') || currentKm;
+    setAlert('alert-oap', 'done', `✓ Replaced at ${fmt(km)} km`);
+  }
+
+  // Control arm bushings / ball joints (issues table)
+  if (hasKw('bushing', 'control arm', 'ball joint')) {
+    const km = latestKmKw('bushing', 'control arm', 'ball joint') || currentKm;
+    setAlert('alert-bushings', 'done', `✓ Serviced at ${fmt(km)} km`);
+  }
+}
+
 function renderAll() {
   document.getElementById('odo-display').innerHTML = fmt(currentKm) + '<span class="odo-unit">km</span>';
   renderServices(currentKm);
@@ -994,6 +1141,7 @@ function renderAll() {
   renderUrgent(currentKm);
   renderTimeline();
   renderLogEntries();
+  updateDynamicSections();
 }
 
 // ═══════════════════════════════════════════════
