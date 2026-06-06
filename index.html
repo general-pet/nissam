@@ -85,6 +85,24 @@
   .cd-unit { font-size: 12px; color: var(--text2); margin-top: 2px; }
   .cd-date { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
+  /* ── FUEL WIDGET ── */
+  .fuel-widget {
+    background: linear-gradient(135deg, rgba(200,168,75,0.12) 0%, rgba(200,168,75,0.04) 100%);
+    border: 1px solid rgba(200,168,75,0.3); border-radius: 16px;
+    padding: 16px 22px; text-align: center; min-width: 175px;
+  }
+  .fuel-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 6px; font-weight: 700; }
+  .fuel-value { font-size: 34px; font-weight: 800; color: var(--accent2); line-height: 1; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .fuel-unit { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .fuel-sub { display: flex; gap: 14px; justify-content: center; margin-top: 10px; }
+  .fuel-sub-item { text-align: center; }
+  .fuel-sub-num { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1; }
+  .fuel-sub-lbl { font-size: 9.5px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+
+  /* ── FUEL FORM ROW ── */
+  .log-liters { width: 130px; }
+  .log-fueltype { flex: 1; min-width: 150px; }
+
   /* ── GRID LAYOUT ── */
   .main { max-width: 1400px; margin: 0 auto; padding: 28px 24px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
   .left-col { display: flex; flex-direction: column; gap: 24px; }
@@ -261,6 +279,7 @@
     .header-widgets { flex-direction: column; width: 100%; }
     .odo-widget { min-width: unset; width: 100%; }
     .countdown-widget { min-width: unset; width: 100%; }
+    .fuel-widget { min-width: unset; width: 100%; }
     .odo-input-row { justify-content: center; }
   }
 
@@ -323,6 +342,21 @@
       <div class="cd-unit">days remaining</div>
       <div class="cd-date">26 August 2026</div>
     </div>
+    <div class="fuel-widget">
+      <div class="fuel-label">⛽ Avg Fuel Use</div>
+      <div class="fuel-value" id="fuel-avg">--</div>
+      <div class="fuel-unit" id="fuel-avg-unit">l/100km</div>
+      <div class="fuel-sub">
+        <div class="fuel-sub-item">
+          <div class="fuel-sub-num" id="fuel-tanks">--</div>
+          <div class="fuel-sub-lbl">Tanks used</div>
+        </div>
+        <div class="fuel-sub-item">
+          <div class="fuel-sub-num" id="fuel-premium">--</div>
+          <div class="fuel-sub-lbl">% Premium</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -371,6 +405,7 @@
           <div class="log-row">
             <select class="log-select" id="log-type" onchange="onLogTypeChange()">
               <option value="">— Select service / part —</option>
+              <option value="refuel">⛽ Fuel Fill-up</option>
               <option value="oil">Engine Oil + Oil Filter</option>
               <option value="cabin">Cabin / Pollen Filter</option>
               <option value="air">Engine Air Filter</option>
@@ -385,6 +420,14 @@
             </select>
             <input class="log-km" type="number" id="log-km" placeholder="km done at" min="1" max="999999">
           </div>
+          <div class="log-row" id="log-fuel-row" style="display:none;">
+            <input class="log-liters" type="number" step="0.01" id="fuel-liters" placeholder="Litres added" min="0.1" max="55">
+            <select class="log-select log-fueltype" id="fuel-type">
+              <option value="regular">Regular Diesel</option>
+              <option value="premium">Premium Diesel</option>
+            </select>
+          </div>
+          <div class="log-hint" id="log-fuel-hint" style="display:none;">Fill-up is recorded at the current odometer (<span id="fuel-cur-km"></span> km). Update the odometer first if you've driven since.</div>
           <div id="log-custom-row" style="display:none;">
             <input class="log-text" style="width:100%;" type="text" id="log-custom-text" placeholder="Describe what was done (e.g. EGR cleaned, rear dampers replaced)">
           </div>
@@ -585,6 +628,10 @@ const SERVICES = DEFAULT_SERVICES.map(s => ({ ...s }));
 let customLog    = [];
 let savedEntries = [];
 
+// fuelLog = fuel fill-ups [{id, liters, type:'regular'|'premium', km, ts}]
+let fuelLog = [];
+const TANK_CAPACITY = 55; // litres — full tank
+
 // ═══════════════════════════════════════════════
 // STATIC DATA (never mutated)
 // ═══════════════════════════════════════════════
@@ -638,6 +685,7 @@ function buildSnapshot() {
     service_last: Object.fromEntries(SERVICES.map(s => [s.id, s.lastKm])),
     custom_log:   customLog,
     saved_entries: savedEntries,
+    fuel_log:     fuelLog,
     updated_at:   new Date().toISOString(),
   };
 }
@@ -648,6 +696,7 @@ function applySnapshot(s) {
   if (s.service_last)  SERVICES.forEach(svc => { if (s.service_last[svc.id] !== undefined) svc.lastKm = s.service_last[svc.id]; });
   if (s.custom_log)    customLog    = s.custom_log;
   if (s.saved_entries) savedEntries = s.saved_entries;
+  if (s.fuel_log)      fuelLog      = s.fuel_log;
 }
 
 // ═══════════════════════════════════════════════
@@ -1149,6 +1198,50 @@ function updateDynamicSections() {
   }
 }
 
+// ═══════════════════════════════════════════════
+// FUEL CONSUMPTION
+// Tank-to-tank method: fuel added at each refill (after the first)
+// is what was burned over the distance since the previous refill.
+// ═══════════════════════════════════════════════
+function computeFuelStats() {
+  const totalLiters   = fuelLog.reduce((a, e) => a + (e.liters || 0), 0);
+  const premiumLiters = fuelLog.filter(e => e.type === 'premium').reduce((a, e) => a + (e.liters || 0), 0);
+  const tanks   = totalLiters / TANK_CAPACITY;
+  const pctPrem = totalLiters > 0 ? (premiumLiters / totalLiters) * 100 : null;
+
+  // Average consumption needs ≥2 fill-ups with distance between them
+  const sorted = [...fuelLog].filter(e => e.km > 0).sort((a, b) => a.km - b.km);
+  let lPerKm = null;
+  if (sorted.length >= 2) {
+    const distance = sorted[sorted.length - 1].km - sorted[0].km;
+    // Exclude the first fill (baseline) — sum the rest as fuel burned over that distance
+    const litersBurned = sorted.slice(1).reduce((a, e) => a + (e.liters || 0), 0);
+    if (distance > 0 && litersBurned > 0) lPerKm = litersBurned / distance;
+  }
+  return { totalLiters, tanks, pctPrem, lPerKm, count: fuelLog.length };
+}
+
+function updateFuelWidget() {
+  const s = computeFuelStats();
+  const avgEl  = document.getElementById('fuel-avg');
+  const unitEl = document.getElementById('fuel-avg-unit');
+  const tanksEl = document.getElementById('fuel-tanks');
+  const premEl  = document.getElementById('fuel-premium');
+
+  if (s.lPerKm != null) {
+    avgEl.textContent  = (s.lPerKm * 100).toFixed(1);
+    unitEl.textContent = 'l/100km';
+  } else {
+    avgEl.textContent  = '--';
+    unitEl.textContent = s.count > 0 ? 'need 2+ fill-ups' : 'l/100km';
+  }
+  tanksEl.textContent = s.totalLiters > 0 ? s.tanks.toFixed(1) : '--';
+  premEl.textContent  = s.pctPrem != null ? Math.round(s.pctPrem) + '%' : '--';
+
+  const curKmEl = document.getElementById('fuel-cur-km');
+  if (curKmEl) curKmEl.textContent = fmt(currentKm);
+}
+
 function renderAll() {
   document.getElementById('odo-display').innerHTML = fmt(currentKm) + '<span class="odo-unit">km</span>';
   renderServices(currentKm);
@@ -1156,6 +1249,7 @@ function renderAll() {
   renderUrgent(currentKm);
   renderTimeline();
   renderLogEntries();
+  updateFuelWidget();
   updateDynamicSections();
 }
 
@@ -1164,7 +1258,13 @@ function renderAll() {
 // ═══════════════════════════════════════════════
 function onLogTypeChange() {
   const t = document.getElementById('log-type').value;
+  const isFuel = (t === 'refuel');
   document.getElementById('log-custom-row').style.display = (t === 'custom') ? 'block' : 'none';
+  document.getElementById('log-fuel-row').style.display   = isFuel ? 'flex' : 'none';
+  document.getElementById('log-fuel-hint').style.display  = isFuel ? 'block' : 'none';
+  // For fuel, km comes from the odometer — hide the manual km field
+  document.getElementById('log-km').style.display = isFuel ? 'none' : '';
+  if (isFuel) document.getElementById('fuel-cur-km').textContent = fmt(currentKm);
 }
 
 function logService() {
@@ -1172,14 +1272,34 @@ function logService() {
   const kmEl     = document.getElementById('log-km');
   const customEl = document.getElementById('log-custom-text');
   const type     = typeEl.value;
-  const km       = parseInt(kmEl.value, 10);
 
-  if (!type)       { typeEl.style.borderColor = 'var(--red)';   setTimeout(() => typeEl.style.borderColor   = '', 1200); return; }
-  if (!km || km<1) { kmEl.style.borderColor   = 'var(--red)';   setTimeout(() => kmEl.style.borderColor     = '', 1200); return; }
-
-  let label;
+  if (!type) { typeEl.style.borderColor = 'var(--red)'; setTimeout(() => typeEl.style.borderColor = '', 1200); return; }
 
   const id = Date.now();
+
+  // ── FUEL FILL-UP ──────────────────────────────
+  if (type === 'refuel') {
+    const litersEl = document.getElementById('fuel-liters');
+    const ftypeEl  = document.getElementById('fuel-type');
+    const liters   = parseFloat(litersEl.value);
+    const ftype    = ftypeEl.value;
+    if (!liters || liters <= 0) { litersEl.style.borderColor = 'var(--red)'; setTimeout(() => litersEl.style.borderColor = '', 1200); return; }
+    fuelLog.push({ id, liters, type: ftype, km: currentKm, ts: new Date().toISOString() });
+    savedEntries.push({ id, label: `⛽ ${liters.toFixed(2)} L ${ftype} diesel`, km: currentKm });
+    // Reset
+    typeEl.value = ''; litersEl.value = '';
+    document.getElementById('log-fuel-row').style.display  = 'none';
+    document.getElementById('log-fuel-hint').style.display = 'none';
+    document.getElementById('log-km').style.display = '';
+    renderAll();
+    saveState();
+    return;
+  }
+
+  const km = parseInt(kmEl.value, 10);
+  if (!km || km<1) { kmEl.style.borderColor = 'var(--red)'; setTimeout(() => kmEl.style.borderColor = '', 1200); return; }
+
+  let label;
 
   if (type === 'custom') {
     const txt = customEl.value.trim();
@@ -1214,6 +1334,10 @@ function removeLogEntry(id) {
   // Remove matching entry from customLog by its tagged id
   const clIdx = customLog.findIndex(e => e.id === id);
   if (clIdx !== -1) customLog.splice(clIdx, 1);
+
+  // Remove matching fuel fill-up
+  const flIdx = fuelLog.findIndex(e => e.id === id);
+  if (flIdx !== -1) fuelLog.splice(flIdx, 1);
 
   // If we removed a known-service entry, revert that service's lastKm to the
   // highest remaining logged value for that service (or back to the default)
